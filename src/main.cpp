@@ -4,16 +4,22 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include "glm/ext/matrix_clip_space.hpp"
+
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 static void ProcessInput(GLFWwindow* window);
 
 const char* vertexShaderSource = "#version 330 core\n"
+                                 "uniform mat4 MVP;\n"
                                  "layout (location = 0) in vec3 aPos;\n"
                                  "layout (location = 1) in vec3 aColor;\n"
                                  "out vec3 ourColor;\n"
                                  "void main()\n"
                                  "{\n"
-                                 "   gl_Position = vec4(aPos, 1.0);\n"
+                                 "   gl_Position = MVP * vec4(aPos, 1.0);\n"
                                  "   ourColor = aColor;\n"
                                  "}\0";
 
@@ -115,9 +121,9 @@ int main()
     // ------------------------------------------------------------------
     float vertices[] = {
          // positions       // colors
-        -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-         0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
-         0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f  // top
+        -0.5f, -0.43f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+         0.5f, -0.43f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom right
+         0.0f,  0.43f, 0.0f, 0.0f, 0.0f, 1.0f  // top
 
     };
 
@@ -154,6 +160,19 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+        // set variables
+        // -----
+        float ratio;
+        int width, height;
+        glm::mat4 model, viewProj, mvp;
+
+        glfwGetFramebufferSize(window, &width, &height);
+        ratio = width / (float) height;
+
+        viewProj = glm::ortho(-ratio, ratio, -1.0f, 1.0f, 1.0f, -1.0f);
+        model = glm::rotate(glm::mat4(1.0f), (float) glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        mvp = viewProj * model;
+
         // input
         // -----
         ProcessInput(window);
@@ -165,6 +184,7 @@ int main()
 
         // render the triangle
         glBindVertexArray(VAO);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "MVP"), 1, GL_FALSE, glm::value_ptr(mvp));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
