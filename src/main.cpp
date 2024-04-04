@@ -13,15 +13,15 @@ static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 static void ProcessInput(GLFWwindow* window);
 
 const char* vertexShaderSource = "#version 330 core\n"
-                                 "uniform mat4 MVP;\n"
+                                 "uniform mat4 mvp;\n"
                                  "layout (location = 0) in vec3 aPos;\n"
                                  "layout (location = 1) in vec3 aColor;\n"
                                  "out vec3 ourColor;\n"
                                  "void main()\n"
                                  "{\n"
-                                 "   gl_Position = MVP * vec4(aPos, 1.0);\n"
+                                 "   gl_Position = mvp * vec4(aPos, 1.0);\n"
                                  "   ourColor = aColor;\n"
-                                 "}\0";
+                                 "}\n\0";
 
 const char* fragmentShaderSource = "#version 330 core\n"
                                    "out vec4 FragColor;\n"
@@ -75,13 +75,13 @@ int main()
 
     // build and compile our shader program
     // ------------------------------------
+    int success;
+    char infoLog[512];
     // vertex shader
     int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
     glCompileShader(vertexShader);
     // check for shader compile errors
-    int success;
-    char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
@@ -151,10 +151,10 @@ int main()
     glUseProgram(shaderProgram);
 
     // setup OpenGL
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // render loop
     // -----------
@@ -184,7 +184,7 @@ int main()
 
         // render the triangle
         glBindVertexArray(VAO);
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "MVP"), 1, GL_FALSE, glm::value_ptr(mvp));
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "mvp"), 1, GL_FALSE, glm::value_ptr(mvp));
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
